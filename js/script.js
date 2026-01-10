@@ -19,7 +19,7 @@ const closeModal = document.querySelector('.modal-close');
 
 let portfolioData = {};
 
-// --- FUNÇÕES DE SEGURANÇA E AUXILIARES ---
+// --- FUNÇÕES ---
 function safe(str) {
     if (!str) return '';
     const div = document.createElement('div');
@@ -41,7 +41,7 @@ function fetchSheet(url) {
     });
 }
 
-// --- CORE: CARREGAMENTO ---
+// --- CORE ---
 async function loadPortfolio() {
     try {
         const [prof, proj, certs] = await Promise.all([
@@ -53,15 +53,14 @@ async function loadPortfolio() {
         if (prof && prof.length) updateProfileUI(prof[0]);
 
         if (proj && proj.length) {
-            // Limpa Skeletons
             document.getElementById('tech-grid').innerHTML = '';
             document.getElementById('edu-timeline').innerHTML = '';
             document.getElementById('comm-projects-grid').innerHTML = '';
             document.getElementById('comm-networks-grid').innerHTML = '';
 
             renderTech(proj.filter(p => p.category === 'tech'));
-            renderEdu(proj.filter(p => p.category === 'edu'));
             renderCommProjects(proj.filter(p => p.category === 'comm_proj'));
+            renderEdu(proj.filter(p => p.category === 'edu'));
             renderCommNetworks(proj.filter(p => p.category === 'comm_net'));
         }
 
@@ -69,44 +68,37 @@ async function loadPortfolio() {
             document.getElementById('cert-list').innerHTML = '';
             renderCerts(certs);
         }
-    } catch (e) {
-        console.error("Erro ao carregar dados:", e);
-    }
+        
+        // Inicia o ScrollSpy depois que o conteúdo carregou
+        initScrollSpy();
+
+    } catch (e) { console.error("Erro:", e); }
 }
 
 function updateProfileUI(p) {
     if (!p.name) return;
-    
     document.querySelector('.logo').innerText = p.name;
     document.title = `${p.name} | Portfólio`;
-    document.querySelector('.bio').innerText = p.bio; // Bio curta e direta
-
-    // Carrega imagem de perfil da coluna 'image'
+    document.querySelector('.bio').innerText = p.bio;
     const heroImg = document.getElementById('hero-profile-img');
-    if (heroImg && p.image) {
-        heroImg.src = resolveImage(p.image);
-    }
+    if (heroImg && p.image) heroImg.src = resolveImage(p.image);
 
     const emailLink = document.querySelector('a[href^="mailto"]');
     if(emailLink) {
         emailLink.href = `mailto:${p.email}`;
         if(emailLink.querySelector('span')) emailLink.querySelector('span').innerText = "E-mail";
     }
-    
-    // Atualiza links se houver colunas correspondentes no CSV (opcional)
     if(p.linkedin) document.querySelector('a[href*="linkedin"]').href = p.linkedin;
     if(p.github) document.querySelector('a[href*="github"]').href = p.github;
 }
 
-// --- RENDERIZADORES ALINHADOS À CONSTITUIÇÃO ---
+// --- RENDERIZADORES ---
 
 function renderTech(items) {
     const container = document.getElementById('tech-grid');
     items.forEach(item => {
         const card = document.createElement('article');
         card.className = 'tech-card';
-        
-        // Abre modal SOMENTE se não clicar nos botões de link
         card.onclick = (e) => {
             if(e.target.closest('.card-link-btn')) return;
             openModal(item);
@@ -114,15 +106,15 @@ function renderTech(items) {
 
         const imgSrc = resolveImage(item.image);
         const tagsHtml = item.tags ? item.tags.split(';').slice(0,3).map(t => `<span class="stack-badge">${safe(t.trim())}</span>`).join('') : '';
-        
-        // REGRA 5: Link visível no card
         const linkBtn = (item.link && item.link !== 'null') 
-            ? `<a href="${item.link}" target="_blank" class="card-link-btn" title="Ver Código/Projeto" style="z-index:10; font-size:1.2rem; color:var(--tech-color);"><i class="ph ph-github-logo"></i></a>` 
+            ? `<a href="${item.link}" target="_blank" class="card-link-btn" title="Ver Código" style="z-index:10; font-size:1.3rem; color:var(--tech-color);"><i class="ph ph-github-logo"></i></a>` 
             : '';
 
+        // CORREÇÃO: CSS Absolute já ajustado no style.css
         card.innerHTML = `
-            <div class="tech-img">
-                <img src="${imgSrc}" onerror="this.src='${FALLBACK_IMAGE}'">
+            <div class="smart-img-container">
+                <div class="smart-img-blur" style="background-image:url('${imgSrc}');"></div>
+                <img class="smart-img-front" src="${imgSrc}" onerror="this.src='${FALLBACK_IMAGE}'">
             </div>
             <div class="tech-body">
                 <div>
@@ -146,11 +138,10 @@ function renderCommProjects(items) {
         div.onclick = () => openModal(item);
         const imgSrc = resolveImage(item.image);
 
-        // REGRA 8: Blur Background para imagens verticais
         div.innerHTML = `
-            <div class="comm-img-placeholder" style="background:#000; position:relative; overflow:hidden; width:100%; height:100%;">
-                <div style="position:absolute; inset:0; background-image:url('${imgSrc}'); background-size:cover; filter:blur(15px); opacity:0.6;"></div>
-                <img src="${imgSrc}" style="position:relative; width:100%; height:100%; object-fit:contain; z-index:1;" onerror="this.src='${FALLBACK_IMAGE}'">
+            <div class="smart-img-container" style="height:100%;">
+                <div class="smart-img-blur" style="background-image:url('${imgSrc}');"></div>
+                <img class="smart-img-front" src="${imgSrc}" onerror="this.src='${FALLBACK_IMAGE}'">
             </div> 
             <div class="comm-overlay">
                 <span>${safe(item.subtitle)}</span>
@@ -185,9 +176,12 @@ function renderCommNetworks(items) {
         div.onclick = () => openModal(item);
         const imgSrc = resolveImage(item.image);
         div.innerHTML = `
-            <div class="comm-img-placeholder"><img src="${imgSrc}" onerror="this.src='${FALLBACK_IMAGE}'"></div> 
+            <div class="smart-img-container" style="height:100%;">
+                <div class="smart-img-blur" style="background-image:url('${imgSrc}');"></div>
+                <img class="smart-img-front" src="${imgSrc}" onerror="this.src='${FALLBACK_IMAGE}'">
+            </div>
             <div class="comm-overlay">
-                <span style="color:#fff;background:var(--comm-color);padding:2px 8px;border-radius:4px;font-size:0.7rem;">INSTITUCIONAL</span>
+                <span style="background:var(--comm-color);">INSTITUCIONAL</span>
                 <h3 style="margin-top:5px;">${safe(item.title)}</h3>
             </div>`;
         container.appendChild(div);
@@ -196,10 +190,28 @@ function renderCommNetworks(items) {
 
 function renderCerts(items) {
     const container = document.getElementById('cert-list');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'cert-item';
-        div.innerHTML = `<h4>${safe(item.title)}</h4><p>${safe(item.org)} • ${safe(item.year)}</p>`;
+        
+        // Verifica se tem link (ignora imagem)
+        const linkHtml = (item.link && item.link !== 'null' && item.link.trim() !== '') 
+            ? `<a href="${item.link}" target="_blank" class="cert-link">
+                 Ver Certificado <i class="ph ph-arrow-square-out"></i>
+               </a>` 
+            : '';
+
+        div.innerHTML = `
+            <div>
+                <h4>${safe(item.title)}</h4>
+                <p>${safe(item.org)} • ${safe(item.year)}</p>
+            </div>
+            ${linkHtml}
+        `;
         container.appendChild(div);
     });
 }
@@ -208,13 +220,10 @@ function renderCerts(items) {
 function openModal(item) {
     modalImg.src = resolveImage(item.image);
     modalTitle.innerText = item.title;
-    
     let sub = item.subtitle || item.role || "";
     if (item.year) sub += ` | ${item.year}`;
     modalSubtitle.innerText = sub;
-
     modalDesc.innerText = item.description || item.summary || "";
-
     modalTags.innerHTML = '';
     if (item.tags) {
         item.tags.split(';').forEach(tag => {
@@ -225,15 +234,11 @@ function openModal(item) {
             modalTags.appendChild(span);
         });
     }
-
     if (item.link && item.link !== 'null' && item.link.trim() !== '') {
         modalLink.href = item.link;
         modalLink.style.display = 'inline-block';
         modalLink.innerHTML = 'Ver Projeto <i class="ph ph-arrow-square-out"></i>';
-    } else {
-        modalLink.style.display = 'none';
-    }
-
+    } else { modalLink.style.display = 'none'; }
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -247,5 +252,30 @@ if(closeModal) closeModal.addEventListener('click', hideModal);
 if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
 
-// Inicializa
+// --- SCROLL SPY (NAVBAR ACTIVE) ---
+function initScrollSpy() {
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            // -150px é um ajuste fino para o highlight mudar um pouco antes de chegar na seção
+            if (pageYOffset >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(a => {
+            a.classList.remove('active');
+            if (a.getAttribute('href').includes(current)) {
+                a.classList.add('active');
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', loadPortfolio);
