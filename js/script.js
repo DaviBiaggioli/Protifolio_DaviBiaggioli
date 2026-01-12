@@ -107,7 +107,7 @@ function renderTech(items) {
         const imgSrc = resolveImage(item.image);
         const tagsHtml = item.tags ? item.tags.split(';').slice(0,3).map(t => `<span class="stack-badge">${safe(t.trim())}</span>`).join('') : '';
         const linkBtn = (item.link && item.link !== 'null') 
-            ? `<a href="${item.link}" target="_blank" class="card-link-btn" title="Ver Código" style="z-index:10; font-size:1.3rem; color:var(--tech-color);"><i class="ph ph-github-logo"></i></a>` 
+            ? `<a href="${item.link}" target="_blank" class="card-link-btn" title="Acessar" style="z-index:10; font-size:1.3rem; color:var(--tech-color);"><i class="ph ph-link"></i></a>` 
             : '';
 
         // CORREÇÃO: CSS Absolute já ajustado no style.css
@@ -279,3 +279,4 @@ function initScrollSpy() {
 }
 
 document.addEventListener('DOMContentLoaded', loadPortfolio);
+
