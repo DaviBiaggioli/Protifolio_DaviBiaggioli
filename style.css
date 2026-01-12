@@ -414,11 +414,53 @@ p { color: var(--text-secondary); }
 
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 
+/* --- RESPONSIVIDADE & MENU MOBILE --- */
 @media (max-width: 768px) {
     .hero-content { grid-template-columns: 1fr; gap: 30px; text-align: center; }
     .hero-actions { justify-content: center; }
     .img-placeholder-circle { width: 240px; height: 240px; }
     .edu-block { grid-template-columns: 1fr; padding-left: 2rem; border-left: 2px dashed #cbd5e1; }
-    .nav-links { display: none; }
-    .mobile-menu-icon { display: block; }
+    
+    /* Menu Mobile Ícone */
+    .mobile-menu-icon { 
+        display: block; 
+        font-size: 2rem; /* Aumentei um pouco para facilitar o toque */
+        cursor: pointer; 
+        color: var(--text-primary); 
+    }
+
+    /* Menu Mobile Links (Estado Fechado) */
+    .nav-links { 
+        display: none; 
+        position: absolute;
+        top: 70px; /* Altura da navbar */
+        left: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95); /* Fundo sólido translúcido */
+        backdrop-filter: blur(10px);
+        flex-direction: column;
+        padding: 2rem 0;
+        box-shadow: var(--shadow-md);
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Menu Mobile Links (Estado Aberto - Classe adicionada via JS) */
+    .nav-links.active {
+        display: flex;
+        animation: slideDown 0.3s ease forwards;
+    }
+
+    .nav-links a {
+        font-size: 1.2rem;
+        padding: 15px 0;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
 }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
