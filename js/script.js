@@ -71,10 +71,29 @@ async function loadPortfolio() {
         
         // Inicia o ScrollSpy depois que o conteúdo carregou
         initScrollSpy();
+        initMobileMenu();
 
     } catch (e) { console.error("Erro:", e); }
 }
+// --- LÓGICA DO MENU MOBILE (Adicione no final do arquivo) ---
+function initMobileMenu() {
+    const mobileIcon = document.querySelector('.mobile-menu-icon');
+    const navLinks = document.querySelector('.nav-links');
+    const links = document.querySelectorAll('.nav-links a');
 
+    if(mobileIcon && navLinks) {
+        mobileIcon.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Fecha o menu ao clicar em um link
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+}
 function updateProfileUI(p) {
     if (!p.name) return;
     document.querySelector('.logo').innerText = p.name;
@@ -279,4 +298,5 @@ function initScrollSpy() {
 }
 
 document.addEventListener('DOMContentLoaded', loadPortfolio);
+
 
